@@ -2,11 +2,8 @@
 <html lang="pt-BR">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
   <title>Loopover Toroidal</title>
-  
-  <!-- p5.js via CDN -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.9.4/p5.min.js"></script>
 
   <style>
     :root {
@@ -15,7 +12,6 @@
       --text: #f8fafc;
       --text-muted: #94a3b8;
       --accent: #38bdf8;
-      --accent-hover: #0284c7;
       --border: #334155;
     }
 
@@ -25,27 +21,29 @@
       padding: 0;
       user-select: none;
       -webkit-user-select: none;
+      -webkit-touch-callout: none;
     }
 
-    body {
+    html, body {
       background-color: var(--bg);
       color: var(--text);
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
       min-height: 100vh;
       display: flex;
       flex-direction: column;
       align-items: center;
       justify-content: center;
-      padding: 16px;
-      touch-action: none;
+      padding: 12px;
+      touch-action: manipulation;
+      overscroll-behavior: none;
     }
 
     .container {
       display: flex;
       flex-direction: column;
       align-items: center;
-      gap: 16px;
-      max-width: 480px;
+      gap: 12px;
+      max-width: 380px;
       width: 100%;
     }
 
@@ -54,14 +52,14 @@
     }
 
     h1 {
-      font-size: 1.5rem;
+      font-size: 1.4rem;
       font-weight: 700;
-      letter-spacing: -0.025em;
+      letter-spacing: -0.02em;
     }
 
     p.subtitle {
       color: var(--text-muted);
-      font-size: 0.85rem;
+      font-size: 0.8rem;
       margin-top: 2px;
     }
 
@@ -70,10 +68,10 @@
       justify-content: space-between;
       width: 100%;
       background: var(--card-bg);
-      padding: 10px 16px;
+      padding: 8px 14px;
       border-radius: 8px;
       border: 1px solid var(--border);
-      font-size: 0.9rem;
+      font-size: 0.85rem;
     }
 
     .stat-item {
@@ -83,9 +81,10 @@
     }
 
     .stat-label {
-      font-size: 0.75rem;
+      font-size: 0.7rem;
       color: var(--text-muted);
       text-transform: uppercase;
+      font-weight: 600;
     }
 
     .stat-value {
@@ -94,29 +93,23 @@
       font-variant-numeric: tabular-nums;
     }
 
-    .game-area {
-      position: relative;
-      border-radius: 12px;
-      overflow: hidden;
-      box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.5);
-      border: 2px solid var(--border);
-      touch-action: none;
-    }
-
     .target-container {
       display: flex;
       align-items: center;
       gap: 12px;
       background: var(--card-bg);
       border: 1px solid var(--border);
-      padding: 8px 16px;
+      padding: 8px 14px;
       border-radius: 8px;
       width: 100%;
     }
 
     #targetCanvas {
+      width: 52px;
+      height: 52px;
       border: 1px solid var(--border);
       border-radius: 4px;
+      flex-shrink: 0;
     }
 
     .target-info {
@@ -126,15 +119,34 @@
     }
 
     .target-title {
-      font-size: 0.75rem;
+      font-size: 0.7rem;
       color: var(--text-muted);
       text-transform: uppercase;
+      font-weight: 600;
     }
 
     .target-name {
-      font-size: 0.95rem;
+      font-size: 0.9rem;
       font-weight: 600;
       color: var(--text);
+    }
+
+    .game-area {
+      position: relative;
+      width: min(88vw, 360px);
+      height: min(88vw, 360px);
+      border-radius: 12px;
+      overflow: hidden;
+      box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.5);
+      border: 2px solid var(--border);
+      touch-action: none;
+    }
+
+    #gameCanvas {
+      width: 100%;
+      height: 100%;
+      display: block;
+      touch-action: none;
     }
 
     .controls {
@@ -148,61 +160,52 @@
       background: var(--card-bg);
       color: var(--text);
       border: 1px solid var(--border);
-      padding: 10px 14px;
+      padding: 10px 12px;
       border-radius: 6px;
       font-size: 0.85rem;
       font-weight: 600;
       cursor: pointer;
-      transition: all 0.15s ease;
       text-align: center;
+      touch-action: manipulation;
     }
 
-    button:hover, select:hover {
+    button:active, select:active {
       background: var(--border);
-      border-color: var(--text-muted);
     }
 
-    button:active {
-      transform: scale(0.98);
-    }
-
-    /* Modal de Vitória */
+    /* Modal exibido apenas com display: flex na vitória */
     .modal-overlay {
+      display: none;
       position: absolute;
       top: 0;
       left: 0;
       width: 100%;
       height: 100%;
-      background: rgba(15, 23, 42, 0.85);
-      backdrop-filter: blur(4px);
-      display: flex;
+      background: rgba(15, 23, 42, 0.92);
       flex-direction: column;
       align-items: center;
       justify-content: center;
-      opacity: 0;
-      pointer-events: none;
-      transition: opacity 0.25s ease;
-      border-radius: 12px;
+      border-radius: 10px;
+      z-index: 20;
+      padding: 16px;
     }
 
     .modal-overlay.active {
-      opacity: 1;
-      pointer-events: auto;
+      display: flex;
     }
 
     .modal-card {
       text-align: center;
-      padding: 24px;
     }
 
     .modal-card h2 {
-      font-size: 1.5rem;
+      font-size: 1.4rem;
       color: #4ade80;
       margin-bottom: 8px;
     }
 
     .modal-card p {
-      font-size: 0.9rem;
+      font-size: 0.85rem;
       color: var(--text-muted);
       margin-bottom: 16px;
     }
@@ -213,7 +216,7 @@
   <div class="container">
     <header>
       <h1>Loopover Toroidal</h1>
-      <p class="subtitle">Deslize linhas e colunas para montar o padrão alvo</p>
+      <p class="subtitle">Deslize linhas e colunas até formar o padrão alvo</p>
     </header>
 
     <div class="stats-bar">
@@ -226,7 +229,7 @@
         <span id="timerText" class="stat-value">00:00</span>
       </div>
       <div class="stat-item">
-        <span class="stat-label">Ordem</span>
+        <span class="stat-label">Grade</span>
         <select id="gridSizeSelect" onchange="changeGridSize(Number(this.value))">
           <option value="3" selected>3 × 3</option>
           <option value="4">4 × 4</option>
@@ -236,15 +239,16 @@
     </div>
 
     <div class="target-container">
-      <canvas id="targetCanvas" width="60" height="60"></canvas>
+      <canvas id="targetCanvas" width="120" height="120"></canvas>
       <div class="target-info">
-        <span class="target-title">Padrão Objetivo</span>
+        <span class="target-title">Padrão Alvo</span>
         <span id="targetPatternName" class="target-name">Carregando...</span>
       </div>
     </div>
 
-    <div class="game-area" id="canvasWrapper">
-      <!-- O canvas do p5.js será injetado aqui -->
+    <div class="game-area">
+      <canvas id="gameCanvas" width="360" height="360"></canvas>
+      
       <div class="modal-overlay" id="victoryModal">
         <div class="modal-card">
           <h2>Padrão Resolvido!</h2>
@@ -255,103 +259,184 @@
     </div>
 
     <div class="controls">
-      <button onclick="startNewGame()">Sortear Outro Alvo</button>
+      <button onclick="startNewGame()">Sortear Alvo</button>
       <button onclick="reshuffleBoard()">Reembaralhar</button>
     </div>
   </div>
 
   <script>
-    // --- Configurações e Estado Global ---
+    // --- Configurações da Matriz e Canvas ---
     let N = 3;
-    let W = 360, H = 360;
+    const W = 360, H = 360;
     let w = W / N, h = H / N;
 
-    let colors = [];
     let grid = [];
     let targetGrid = [];
-    let currentPatternName = "";
 
     let movesCount = 0;
     let secondsElapsed = 0;
     let timerInterval = null;
     let gameWon = false;
 
-    // Estado do mouse / drag
+    // Estado do Arraste
+    let isDragging = false;
     let pressedX = 0, pressedY = 0;
+    let currentX = 0, currentY = 0;
     let pressedRow = 0, pressedCol = 0;
     let dx = 0, dy = 0;
-    let isDragging = false;
+
+    const gameCanvas = document.getElementById("gameCanvas");
+    const ctx = gameCanvas.getContext("2d");
 
     const mod = (n, m) => ((n % m) + m) % m;
 
-    // --- Catálogo de Padrões Estéticos ---
     const PATTERNS = [
-      {
-        name: "Arco-íris Horizontal",
-        fn: (x, y, n) => y
-      },
-      {
-        name: "Arco-íris Vertical",
-        fn: (x, y, n) => x
-      },
-      {
-        name: "Diagonal Descendente",
-        fn: (x, y, n) => mod(x + y, n)
-      },
-      {
-        name: "Diagonal Ascendente",
-        fn: (x, y, n) => mod(x - y, n)
-      },
-      {
-        name: "Blocos Espelhados",
-        fn: (x, y, n) => (x < Math.floor(n / 2) ? y : mod(y + 1, n))
-      }
+      { name: "Arco-íris Horizontal", fn: (x, y, n) => y },
+      { name: "Arco-íris Vertical", fn: (x, y, n) => x },
+      { name: "Diagonal Descendente", fn: (x, y, n) => mod(x + y, n) },
+      { name: "Diagonal Ascendente", fn: (x, y, n) => mod(x - y, n) },
+      { name: "Blocos Espelhados", fn: (x, y, n) => (x < Math.floor(n / 2) ? y : mod(y + 1, n)) }
     ];
 
-    function setup() {
-      // Ajusta para telas móveis mantendo formato quadrado
-      const wrapper = document.getElementById("canvasWrapper");
-      const size = Math.min(360, window.innerWidth - 48);
-      W = size;
-      H = size;
-      w = W / N;
-      h = H / N;
-
-      const cv = createCanvas(W, H);
-      cv.parent(wrapper);
-      colorMode(HSB, 360, 100, 100);
-
-      startNewGame();
-    }
-
-    function draw() {
-      background(15, 23, 42);
-      stroke(30, 41, 59);
-      strokeWeight(2);
+    // --- Ciclo Principal de Renderização (60/120 FPS) ---
+    function render() {
+      ctx.fillStyle = "#0f172a";
+      ctx.fillRect(0, 0, W, H);
 
       let rx = 0, ry = 0;
 
-      // Renderização com projeção toroidal contínua [-N, 2N)
       for (let x = -N; x < 2 * N; x++) {
         for (let y = -N; y < 2 * N; y++) {
           rx = 0;
           ry = 0;
 
           if (isDragging) {
-            if (abs(dy) > abs(dx) && mod(x, N) === pressedCol) {
-              ry = (mouseY - pressedY) % H;
-            } else if (abs(dy) < abs(dx) && mod(y, N) === pressedRow) {
-              rx = (mouseX - pressedX) % W;
+            if (Math.abs(dy) > Math.abs(dx) && mod(x, N) === pressedCol) {
+              ry = (currentY - pressedY) % H;
+            } else if (Math.abs(dx) > Math.abs(dy) && mod(y, N) === pressedRow) {
+              rx = (currentX - pressedX) % W;
             }
           }
 
-          fill(colors[grid[mod(y, N)][mod(x, N)]]);
-          rect(x * w + rx, y * h + ry, w, h, 4);
+          const drawX = x * w + rx;
+          const drawY = y * h + ry;
+
+          // Renderiza blocos com padding e bordas arredondadas
+          const hue = (grid[mod(y, N)][mod(x, N)] * 360) / N;
+          ctx.fillStyle = `hsl(${hue}, 75%, 55%)`;
+          ctx.strokeStyle = "#0f172a";
+          ctx.lineWidth = 3;
+
+          const pad = 2;
+          ctx.beginPath();
+          if (ctx.roundRect) {
+            ctx.roundRect(drawX + pad, drawY + pad, w - pad * 2, h - pad * 2, 6);
+          } else {
+            ctx.rect(drawX + pad, drawY + pad, w - pad * 2, h - pad * 2);
+          }
+          ctx.fill();
+          ctx.stroke();
         }
+      }
+
+      requestAnimationFrame(render);
+    }
+
+    // --- Pointer Events API (Touch + Mouse Unificados) ---
+    function getPointerPos(e) {
+      const rect = gameCanvas.getBoundingClientRect();
+      return {
+        x: ((e.clientX - rect.left) / rect.width) * W,
+        y: ((e.clientY - rect.top) / rect.height) * H
+      };
+    }
+
+    gameCanvas.addEventListener("pointerdown", (e) => {
+      if (gameWon) return;
+      e.preventDefault();
+
+      try {
+        gameCanvas.setPointerCapture(e.pointerId);
+      } catch (err) {}
+
+      const pos = getPointerPos(e);
+      pressedX = pos.x;
+      pressedY = pos.y;
+      currentX = pos.x;
+      currentY = pos.y;
+      dx = 0;
+      dy = 0;
+
+      pressedCol = Math.min(Math.max(Math.floor(pressedX / w), 0), N - 1);
+      pressedRow = Math.min(Math.max(Math.floor(pressedY / h), 0), N - 1);
+      isDragging = true;
+    });
+
+    gameCanvas.addEventListener("pointermove", (e) => {
+      if (!isDragging || gameWon) return;
+      e.preventDefault();
+
+      const pos = getPointerPos(e);
+      currentX = pos.x;
+      currentY = pos.y;
+      dx = (currentX - pressedX) / w;
+      dy = (currentY - pressedY) / h;
+    });
+
+    function finishDrag(e) {
+      if (!isDragging) return;
+      isDragging = false;
+
+      try {
+        gameCanvas.releasePointerCapture(e.pointerId);
+      } catch (err) {}
+
+      const rdx = Math.round(dx);
+      const rdy = Math.round(dy);
+
+      if (Math.abs(dx) > Math.abs(dy) && rdx !== 0) {
+        moveRow(pressedRow, rdx);
+        movesCount++;
+        updateMoveCounter();
+        checkVictory();
+      } else if (Math.abs(dy) > Math.abs(dx) && rdy !== 0) {
+        moveCol(pressedCol, rdy);
+        movesCount++;
+        updateMoveCounter();
+        checkVictory();
+      }
+
+      dx = 0;
+      dy = 0;
+    }
+
+    gameCanvas.addEventListener("pointerup", finishDrag);
+    gameCanvas.addEventListener("pointercancel", finishDrag);
+
+    // --- Álgebra Toroidal ---
+    function moveRow(rowN, delta) {
+      let shift = mod(delta, N);
+      if (shift === 0) return;
+      let newRow = [];
+      for (let i = 0; i < N; i++) {
+        newRow[i] = grid[rowN][mod(i - shift, N)];
+      }
+      grid[rowN] = newRow;
+    }
+
+    function moveCol(colN, delta) {
+      let shift = mod(delta, N);
+      if (shift === 0) return;
+      let newCol = [];
+      for (let i = 0; i < N; i++) {
+        newCol[i] = grid[mod(i - shift, N)][colN];
+      }
+      for (let i = 0; i < N; i++) {
+        grid[i][colN] = newCol[i];
       }
     }
 
-    // --- Inicialização e Controle do Jogo ---
+    // --- Controle de Jogo e Alvo ---
     function startNewGame() {
       document.getElementById("victoryModal").classList.remove("active");
       gameWon = false;
@@ -359,29 +444,17 @@
       updateMoveCounter();
       resetTimer();
 
-      // Recria as cores no espaço HSB
-      colors = [];
-      for (let i = 0; i < N; i++) {
-        colors.push(color((i * 360) / N, 75, 95));
-      }
-
-      // Sorteia o padrão alvo
       const pattern = PATTERNS[Math.floor(Math.random() * PATTERNS.length)];
-      currentPatternName = pattern.name;
-      document.getElementById("targetPatternName").innerText = currentPatternName;
+      document.getElementById("targetPatternName").innerText = pattern.name;
 
-      // Monta matriz do alvo
       targetGrid = Array.from({ length: N }, (_, y) =>
         Array.from({ length: N }, (_, x) => pattern.fn(x, y, N))
       );
 
-      // Renderiza mini preview do alvo no canvas 2D secundário
       renderTargetPreview();
 
-      // Clona matriz alvo para o tabuleiro principal
+      // Clona e embaralha via passos válidos (solvabilidade garantida)
       grid = targetGrid.map(row => [...row]);
-
-      // Embaralha aplicando passos válidos a partir do alvo (solvabilidade garantida)
       shuffleGrid(N * 7);
     }
 
@@ -412,11 +485,9 @@
           idx = (idx + 1) % N;
         }
 
-        if (isRow) {
-          moveRow(idx, delta);
-        } else {
-          moveCol(idx, delta);
-        }
+        if (isRow) moveRow(idx, delta);
+        else moveCol(idx, delta);
+
         lastAxis = isRow;
         lastIdx = idx;
       }
@@ -424,90 +495,24 @@
 
     function renderTargetPreview() {
       const tc = document.getElementById("targetCanvas");
-      const ctx = tc.getContext("2d");
+      const tctx = tc.getContext("2d");
       const cw = tc.width / N;
       const ch = tc.height / N;
 
-      ctx.clearRect(0, 0, tc.width, tc.height);
+      tctx.clearRect(0, 0, tc.width, tc.height);
 
       for (let y = 0; y < N; y++) {
         for (let x = 0; x < N; x++) {
           const hue = (targetGrid[y][x] * 360) / N;
-          ctx.fillStyle = `hsl(${hue}, 75%, 55%)`;
-          ctx.fillRect(x * cw, y * ch, cw, ch);
-          ctx.strokeStyle = "#0f172a";
-          ctx.lineWidth = 1;
-          ctx.strokeRect(x * cw, y * ch, cw, ch);
+          tctx.fillStyle = `hsl(${hue}, 75%, 55%)`;
+          tctx.fillRect(x * cw, y * ch, cw, ch);
+          tctx.strokeStyle = "#0f172a";
+          tctx.lineWidth = 1.5;
+          tctx.strokeRect(x * cw, y * ch, cw, ch);
         }
       }
     }
 
-    // --- Mecânica de Drag e Input ---
-    function mousePressed() {
-      if (gameWon) return;
-      if (mouseX >= 0 && mouseX < W && mouseY >= 0 && mouseY < H) {
-        pressedX = mouseX;
-        pressedY = mouseY;
-        pressedCol = constrain(floor(pressedX / w), 0, N - 1);
-        pressedRow = constrain(floor(pressedY / h), 0, N - 1);
-        isDragging = true;
-      }
-    }
-
-    function mouseDragged() {
-      if (!isDragging || gameWon) return;
-      dx = (mouseX - pressedX) / w;
-      dy = (mouseY - pressedY) / h;
-    }
-
-    function mouseReleased() {
-      if (!isDragging || gameWon) return;
-
-      const rdx = round(dx);
-      const rdy = round(dy);
-
-      if (abs(dx) > abs(dy) && rdx !== 0) {
-        moveRow(pressedRow, rdx);
-        movesCount++;
-        updateMoveCounter();
-        checkVictory();
-      } else if (abs(dx) < abs(dy) && rdy !== 0) {
-        moveCol(pressedCol, rdy);
-        movesCount++;
-        updateMoveCounter();
-        checkVictory();
-      }
-
-      isDragging = false;
-      pressedX = 0;
-      pressedY = 0;
-      dx = 0;
-      dy = 0;
-    }
-
-    function moveRow(rowN, delta) {
-      let shift = mod(delta, N);
-      if (shift === 0) return;
-      let newRow = [];
-      for (let i = 0; i < N; i++) {
-        newRow[i] = grid[rowN][mod(i - shift, N)];
-      }
-      grid[rowN] = newRow;
-    }
-
-    function moveCol(colN, delta) {
-      let shift = mod(delta, N);
-      if (shift === 0) return;
-      let newCol = [];
-      for (let i = 0; i < N; i++) {
-        newCol[i] = grid[mod(i - shift, N)][colN];
-      }
-      for (let i = 0; i < N; i++) {
-        grid[i][colN] = newCol[i];
-      }
-    }
-
-    // --- Vitória e Estatísticas ---
     function checkVictory() {
       for (let y = 0; y < N; y++) {
         for (let x = 0; x < N; x++) {
@@ -515,7 +520,6 @@
         }
       }
 
-      // Vitória confirmada
       gameWon = true;
       clearInterval(timerInterval);
       document.getElementById("victoryDetails").innerText = 
@@ -544,6 +548,10 @@
       const s = String(sec % 60).padStart(2, "0");
       return `${m}:${s}`;
     }
+
+    // Inicialização
+    startNewGame();
+    requestAnimationFrame(render);
   </script>
 </body>
 </html>
